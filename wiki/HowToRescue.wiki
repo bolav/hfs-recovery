@@ -8,7 +8,9 @@ How to rescue your disk
 
 Use ddrescue http://www.gnu.org/software/ddrescue/ddrescue.html
 
+{{{
 $ ddrescue /dev/sdb2 macimage logfile
+}}}
 
 = Try to repair =
 
@@ -20,7 +22,10 @@ If the repair tools doesnt work, you probably are missing the Volume header. Dat
 
 == Find catalogFile ==
 
-Search for files on the diskimage. Easiest is probably to use strings. $ strings -e b macimage
+Search for files on the diskimage. Easiest is probably to use strings. 
+{{{
+$ strings -e b macimage
+}}}
 
 To use this find where these files are located on the disk. Use hexedit.
 {{{

@@ -32,7 +32,7 @@ To use this find where these files are located on the disk. Use hexedit.
 $ hexedit macimage
 CTRL-S
 }}}
-then enter the file you are looking for big-endian. Use 00dd00dd for the filename.
+then enter the file you are looking for big-endian. Use 00xx00xx for the filename.
 
 === Find head of catalogFile ===
 

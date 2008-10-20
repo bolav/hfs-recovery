@@ -53,3 +53,5 @@ The first 4 bytes is next node. The next 4 bytes is previous node. The FF 01 is 
 When you have the offset of the leafNode, it is time to dump it, and find the nodeNumber, the start of this extent, number of blocks in this extent, nodeSize and blockSize.
 
 === Find rest of catalogFile ===
+
+Having the last file you got out of the catalogFile, you can compare this to the files listed from strings. Find a file that you have not got out, and search for it in hexedit. Use this to find the offset that this extent has, and save that.

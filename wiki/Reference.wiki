@@ -1,0 +1,11 @@
+#summary Other information.
+
+= Introduction =
+
+Other information.
+
+
+= Details =
+
+   * Technical documentation from Apple: http://developer.apple.com/technotes/tn/tn1150.html
+   * HFSExplorer - Java program: http://hem.bredband.net/catacombae/hfsx.html

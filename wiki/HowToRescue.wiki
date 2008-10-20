@@ -23,10 +23,10 @@ If the repair tools doesnt work, you probably are missing the Volume header. Dat
 Search for files on the diskimage. Easiest is probably to use strings. $ strings -e b macimage
 
 To use this find where these files are located on the disk. Use hexedit.
-<pre>
-hexedit macimage
+{{{
+$ hexedit macimage
 CTRL-S
-</pre>
+}}}
 then enter the file you are looking for big-endian. Use 00dd00dd for the filename.
 
 === Find head of catalogFile ===

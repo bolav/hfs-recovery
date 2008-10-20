@@ -1,0 +1,19 @@
+#summary How to rescue
+
+= Introduction =
+
+How to rescue your disk
+
+= Make a image of your disk =
+
+Use ddrescue http://www.gnu.org/software/ddrescue/ddrescue.html
+
+ddrescue /dev/sdb2 image logfile
+
+= Try to repair =
+
+Try some tools to repair. Disk Warrior, and others.
+
+= Find the blocks you need =
+
+If the repair tools doesnt work, you probably are missing the Volume header. Data as blocksize, and the location of the catalogFile are data that is difficult to recreate. You will have to find these manually. The catalogFile is separeted in several blocks. This will make the rescue harder.

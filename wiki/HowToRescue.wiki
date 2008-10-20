@@ -8,7 +8,7 @@ How to rescue your disk
 
 Use ddrescue http://www.gnu.org/software/ddrescue/ddrescue.html
 
-ddrescue /dev/sdb2 image logfile
+$ ddrescue /dev/sdb2 macimage logfile
 
 = Try to repair =
 
@@ -17,3 +17,20 @@ Try some tools to repair. Disk Warrior, and others.
 = Find the blocks you need =
 
 If the repair tools doesnt work, you probably are missing the Volume header. Data as blocksize, and the location of the catalogFile are data that is difficult to recreate. You will have to find these manually. The catalogFile is separeted in several blocks. This will make the rescue harder.
+
+== Find catalogFile ==
+
+Search for files on the diskimage. Easiest is probably to use strings. $ strings -e b macimage
+
+To use this find where these files are located on the disk. Use hexedit.
+<pre>
+hexedit macimage
+CTRL-S
+</pre>
+then enter the file you are looking for big-endian. Use 00dd00dd for the filename.
+
+=== Find head of catalogFile ===
+
+
+
+=== Find rest of catalogFile ===

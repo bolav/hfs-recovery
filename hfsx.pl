@@ -24,11 +24,8 @@ $fh->open("/root/bo-backup/bolav-mac-fuck-disk-sdb2") || die "Couldnt open";
 # my $offset = 209735680; # Partition starts there - for full dump
 my $offset = 0;
 
-
 # read APM
-# my $length = filelength
 # test / browse / fragcheck / fileinfo
-#my $user_seek = 0x02C6D000;
 
 my %folder_id;
 my %files_folder;
@@ -41,33 +38,25 @@ my $maxseen = 0;
 my $maxread = 0;
 my $maxtried = 0;
 
-#my $user_seek = 0x02C6D000-(8192*4010);
-# 4010 
-# -> 115
-# 46583808
-# 32948224
-#my $catalogfile = 0x02C6D000-(8192*(4010+12));
 my $catalogfile = 0xD01000;
-my $user_seek = 0x02C6D000-(8192*(4010-1));
+my $user_seek = 0x0D01000;
 print "seek: $user_seek\n";
 
+# To make logfile:
 if (0) {
   #&read_catalog($user_seek,1,1,15945,1);
   #&read_catalog($user_seek,1,15946,28672-15946,2);
-  #&read_catalog($user_seek,1,28672,42223-28672,1);
-  &read_catalog($user_seek,1,42222,42235-42220,1);
-
-  # 39131
+  #&read_catalog($user_seek,1,28672,42235-28672,1);
 
   &print_vars;
   exit(0);
 }
 
+print "\n> ";
+
 while (<>) {
-  if (/^lsxxxx$/) {
-    &read_catalog($user_seek);
-#  } elsif (/^cat (.*)$/) {
-#    &cat_file($user_seek,$1);
+  if (/^help$/) {
+    &print_help;
   } elsif (/^init\s*(\d*)\s*(\d*)$/) {
     &read_catalog($user_seek,1,$1,$2);
   } elsif (/^dinit\s*(\d*)\s*(\d*)$/) {
@@ -111,6 +100,13 @@ while (<>) {
     print "errors: ",join(",",@error_nodes),"\n";
   } elsif (/^seen$/) {
     print "seen: ",join(",", keys %seen),"\n";
+  } elsif (/^const$/) {
+    print "image: \n";
+    print "logfile: $logfile\n";
+    print "blocksize: $blockSize\n";
+    print "nodesize: $nodeSize\n";
+    print "start of catalogfile: $catalogfile\n";
+    # also show the different extents
   } elsif (/^vars$/) {
     &print_vars;
   }
@@ -118,6 +114,36 @@ while (<>) {
   # set seek
   # set nodesize
   print "\n> ";
+}
+
+sub print_help
+{
+  print "help: This page\n";
+  print "init [start] [count]: inits some nodes from catalogfile\n";
+  print "  start: start nodeNumber\n";
+  print "  count: number of nodes to read\n";
+  print "dinit [start] [count]: inits some nodes, with debug output\n";
+  print "lsid id: list the contents of folder id\n";
+  print "catid id: shows the contents of the file id\n";
+  print "cpid id [filename]: copies the contents of the file id to filename\n";
+  print "  creates the original filename if not specified\n"; 
+  print "treeid id: shows the directory structure under folder id\n";
+  print "savedir id: copies all directories and files under id to local disk\n";
+  print "showdirids: shows all folder ids read to memory\n";
+  print "showorphans: shows all folder ids read to memory,\n";
+  print "  with no parents in memory\n";
+  print "search filename: search for filename in memory\n";
+  print "rsearch filename: search for filename in memory using regexp\n";
+  print "up id: shows the directory structure over id\n";
+  print "lsearch search: search in log for text using grep\n";
+  print "lload id: search in log for id, and catalogfile nodes corresponding\n";
+  print "  to it, and it's children\n";
+  print "lloadr id: like lload, but recursive for catalogs under\n";
+  print "free: free memory held up by files and folders in memory\n";
+  print "errors: show nodenumbers with errors\n";
+  print "seen: nodes that are loaded in memory\n";
+  print "const: show constants\n";
+  print "vars:  show variables\n";
 }
 
 sub print_vars 

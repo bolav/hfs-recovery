@@ -12,14 +12,19 @@ use Filesystem::HFS::HFSPlusCatalogFile;
 
 my $image;
 my $logfile = "macdisk.ls";
+my $image = "/root/bo-backup/bolav-mac-fuck-disk-sdb2";
 
-  my $nodeSize = 8192;
-  my $blockSize = 4096;
+my $nodeSize = 8192;
+my $blockSize = 4096;
 
 my $fh = new IO::File;
-$fh->open("/root/bo-backup/bolav-mac-fuck-disk-sdb2") || die "Couldnt open";
+$fh->open($image) || die "Couldnt open";
 
 # Todo: read threads?
+# Support large files (runs out of memory)
+# Support working disks? 
+#   read header to get:
+#   nodesize, blocksize, catalogfile extents
 
 # my $offset = 209735680; # Partition starts there - for full dump
 my $offset = 0;
@@ -303,8 +308,6 @@ sub show_dirid
       }
     }
     print "\n";
-    
-#    print $k->ls_string(),"\n";
   }
 }
 
@@ -350,6 +353,8 @@ sub cp_id
   close($of);
 }
 
+# This will crash for large files.
+# Should probably take a filehandle, and show it there on the go.
 sub get_id
 {
   my $cnid = shift;
@@ -391,13 +396,15 @@ sub read_catalog
   my $find_file = 0;
   $fh->seek($offset+$seek,0);
   my $nodeNumber = 13;
-  # my $bytesRead = 
   
   my $cur = 13;
   $no = 10 unless ($no);
   $cur = $start if ($start);
-  # my $cur = 2993; 512
   
+  # tree_offset is a hack to enable  catalogfile extents. 
+  # Should be solved in another way
+  # This will crash when reading the 
+  # whole catalogfile in one go.
   my $tree_offset = 0;
   if ($cur > 15945) {
     $tree_offset = 716097;
@@ -428,6 +435,9 @@ for (my $jjj=0;$jjj<$no;$jjj++){
       &&(!$seen{$nodeNumber})
      )
   {
+
+
+  # read offsets backward (we need nodeSize)
   my @off;
   for (my $i=0;$i<$nodeDescriptor->numRecords();$i++) {
     my $j = $nodeSize-(($i+1)*2);
@@ -435,18 +445,7 @@ for (my $jjj=0;$jjj<$no;$jjj++){
       Filesystem::HFS::DataReader::UInt16_off($buf,$j)
     );
   }
-  # read offsets backward (we need nodeSize)
-  #177 	    int nodeSize = bthr.getNodeSize();
-  #178 	    byte[] currentNode = new byte[nodeSize];
-  
-  #249 		for(int i = 0; i < offsets.length; ++i) {
-  #250 		    offsets[i] = Util.readShortBE(currentNode, currentNode.length-((i+1)*2));
-  #251 		}
-  
-  #253 		for(int i = 0; i < offsets.length; ++i) {
-  #254 		    int currentOffset = Util2.unsign(offsets[i]);
-  #255 
-  #256 		    if(i < offsets.length-1) {
+
   for (my $i = 1; $i<$nodeDescriptor->numRecords();$i++) {
     if ($nodeDescriptor->kind() != Filesystem::HFS::BTNodeDescriptor::BT_HEADER_NODE) 
     {
@@ -500,6 +499,9 @@ for (my $jjj=0;$jjj<$no;$jjj++){
           }
           #print "extents: ".$fileRec->dataFork()->extents()->toString()."\n";
           #print $fileRec->toString();
+
+# What should we do with ThreadRecords? Enable some searching?
+
         } elsif ($recordType == 0x0003) { 
         } elsif ($recordType == 0x0004) { 
         }
@@ -521,6 +523,7 @@ for (my $jjj=0;$jjj<$no;$jjj++){
     $flink++;
   }
     
+# Some unused functionality, to read catalogfile in other:
 #  print "Seeking to: ",$flink,"\n";
 #  $fh->seek($catalogfile+($flink * $nodeSize),0);
 #  $nodeNumber=$flink;
@@ -530,6 +533,9 @@ for (my $jjj=0;$jjj<$no;$jjj++){
   }
 }
 
+
+
+# Header fubar, so this is not used, nor working.
 
 sub read_header 
 {
@@ -582,55 +588,6 @@ my $currentNode =
      'datareader' => $dr);
 
 # $header = new Filesystem::HFS::HFSPlusVolumeHeader($currentBlock);
-
-# long catalogFilePosition =
-# header.getBlockSize()*
-# header.getCatalogFile().getExtents().getExtentDescriptor(0).getStartBlock();
-
-# isoRaf.seek(offset + catalogFilePosition);
-
-#  155 	    byte[] nodeDescriptorData = new byte[14];
-#  156 	    if(isoRaf.read(nodeDescriptorData) != nodeDescriptorData.length)
-#  157 		System.out.println("ERROR: Did not read nodeDescriptor completely.");
-#  158 	    BTNodeDescriptor btnd = new BTNodeDescriptor(nodeDescriptorData, 0);
-#  159 	    btnd.print(System.out, "");
-
-#  161 	    byte[] headerRec = new byte[BTHeaderRec.length()];
-#  162 	    if(isoRaf.read(headerRec) != headerRec.length)
-#  163 		System.out.println("ERROR: Did not read headerRec completely.");
-#  164 	    BTHeaderRec bthr = new BTHeaderRec(headerRec, 0);
-#  165 	    bthr.print(System.out, "");
-#  166 
-#  167 	    // Now we have the node size, so we could just list the nodes and see what types are there.
-#  168 	    // Btw, does the length of the catalog file containing this b-tree align to the node size?
-#  169 	    if(catalogFileLength % bthr.getNodeSize() != 0) {
-#  170 		System.out.println("catalogFileLength is not aligned to node size! (" + catalogFileLength +
-#  171 				   " % " + bthr.getNodeSize() + " = " + catalogFileLength % bthr.getNodeSize());
-#  172 		return;
-#  173 	    }
-#  174 	    else
-#  175 		System.out.println("Number of nodes in the catalog file: " + (catalogFileLength / bthr.getNodeSize()));
-#  176 
-#  177 	    int nodeSize = bthr.getNodeSize();
-#  178 	    byte[] currentNode = new byte[nodeSize];
-#  179 
-#  180 
-#  181 
-#  182 	    // collect all records belonging to directory 1 (= ls)
-#  183 	    System.out.println();
-#  184 	    System.out.println();
-#  185 	    ForkFilter catalogFile = new ForkFilter(header.getCatalogFile(),
-#  186 						    header.getCatalogFile().getExtents().getExtentDescriptors(),
-#  187 						    isoRaf, offset, header.getBlockSize());
-#  188 	    HFSPlusCatalogLeafRecord[] f = HFSPlusFileSystemView.collectFilesInDir(new HFSCatalogNodeID(1), bthr.getRootNode(), isoRaf,
-#  189 									       offset, header, bthr, catalogFile);
-#  190 	    System.out.println("Found " + f.length + " items in subroot.");
-
-#  188 	    HFSPlusCatalogLeafRecord[] f = HFSPlusFileSystemView.collectFilesInDir(new HFSCatalogNodeID(1), bthr.getRootNode(), isoRaf,
-#  189 									       offset, header, bthr, catalogFile);
-}
-
-
 
 #print &debug($currentBlock);
 

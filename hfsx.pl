@@ -10,6 +10,9 @@ use Filesystem::HFS::HFSPlusCatalogKey;
 use Filesystem::HFS::HFSPlusCatalogFolder;
 use Filesystem::HFS::HFSPlusCatalogFile;
 
+my $image;
+my $logfile = "macdisk.ls";
+
   my $nodeSize = 8192;
   my $blockSize = 4096;
 
@@ -31,6 +34,7 @@ my %folder_id;
 my %files_folder;
 my %key_cnid;
 my %rec_cnid;
+my %seen;
 my @error_nodes;
 
 my $maxseen = 0;
@@ -40,13 +44,18 @@ my $maxtried = 0;
 #my $user_seek = 0x02C6D000-(8192*4010);
 # 4010 
 # -> 115
-my $catalogfile = 0x02C6D000-(8192*(4010+12));
+# 46583808
+# 32948224
+#my $catalogfile = 0x02C6D000-(8192*(4010+12));
+my $catalogfile = 0xD01000;
 my $user_seek = 0x02C6D000-(8192*(4010-1));
 print "seek: $user_seek\n";
 
-if (1) {
+if (0) {
   #&read_catalog($user_seek,1,1,15945,1);
-  &read_catalog($user_seek,1,15946,28672-15946,2);
+  #&read_catalog($user_seek,1,15946,28672-15946,2);
+  #&read_catalog($user_seek,1,28672,42223-28672,1);
+  &read_catalog($user_seek,1,42222,42235-42220,1);
 
   # 39131
 
@@ -83,14 +92,25 @@ while (<>) {
     &search($1,2);
   } elsif (/^up (\d+)$/) {
     &up($1);
+  } elsif (/^lsearch (.*)$/) {
+    &lsearch($1);
+  } elsif (/^lsearchr (.*)$/) {
+    &lsearch($1);
+  } elsif (/^lload (\d+)$/) {
+    &lload($1);
+  } elsif (/^lloadr (\d+)$/) {
+    &lload($1,1);
   } elsif (/^free$/) {
     print "memory freed\n";
     %folder_id = ();
     %files_folder = ();
     %key_cnid = ();
     %rec_cnid = ();
+    %seen = ();
   } elsif (/^errors$/) {
     print "errors: ",join(",",@error_nodes),"\n";
+  } elsif (/^seen$/) {
+    print "seen: ",join(",", keys %seen),"\n";
   } elsif (/^vars$/) {
     &print_vars;
   }
@@ -123,6 +143,50 @@ sub up
       print "\n";
       &up($key_cnid{$cnid}->parentID());
   }
+}
+
+sub lsearch
+{
+  my $search = shift;
+  my $tfh;
+  open($tfh,"grep \"$search\" $logfile|");
+  while (<$tfh>) {
+    print;
+  }
+  close($tfh);
+}
+
+sub lload
+{
+  my $cnid = shift;
+  my $recursive = shift;
+  my $tfh;
+  open($tfh,"grep \"i:$cnid \" $logfile|");
+  while (<$tfh>) {
+    print ;
+    if (/^\[(\d+)\]/) {
+      my $cnid = $1;
+      unless ($seen{$cnid}) {
+        &read_catalog($user_seek,1,$cnid,1);
+      }
+    }
+  }
+  close($tfh);
+
+  open($tfh,"grep \"p:$cnid,\" $logfile|");
+  while (<$tfh>) {
+    print;
+    if (/^\[(\d+)\]/) {
+      my $cnid = $1;
+      unless ($seen{$cnid}) {
+        &read_catalog($user_seek,1,$cnid,1);
+      }
+      if (($recursive)&&(/i:(\d+).*\[folder\]/)) {
+        &lload($1,$recursive);
+      }
+    }
+  }
+  close($tfh);
 }
 
 sub search
@@ -291,28 +355,6 @@ sub get_id
   return substr($ret,0,$df->logicalSize());
 }
 
-sub cat_file 
-{
-  my $seek = shift;
-  my $file = shift;
-  
-  my $v = &read_catalog($seek,1,$file);
-  print "Found: ",$v->{'key'}->nodeName(),"\n";
-  print "Size: ",$v->{'filerec'}->dataFork()->logicalSize(),"\n";
-  my $buf;
-  
-  my $eds = $v->{'filerec'}->dataFork()->extents()->extentDescriptors();
-  foreach my $ed (@{$eds}) {
-    print "Reading: ",$ed->blockCount()," from ",$ed->startBlock(),"\n";
-    if ($ed->blockCount()>0) {
-      print "Reading!\n";
-      $fh->seek($ed->startBlock()*$blockSize,0);
-      print "read ",$fh->read($buf,$blockSize*$ed->blockCount()),"\n";
-      print $buf;
-    }
-  }
-}
-
 sub read_catalog
 {
   my $seek = shift;
@@ -325,17 +367,6 @@ sub read_catalog
   my $nodeNumber = 13;
   # my $bytesRead = 
   
-  my %seen;
-  
-  my %bad = ( 127 => 1,
-              143 => 1,
-              183 => 1,
-              236 => 1,
-              303 => 1,
-              319 => 1,
-              334 => 1,
-              351 => 1,
-            );
   my $cur = 13;
   $no = 10 unless ($no);
   $cur = $start if ($start);
@@ -343,7 +374,10 @@ sub read_catalog
   
   my $tree_offset = 0;
   if ($cur > 15945) {
-    $tree_offset += 716097;
+    $tree_offset = 716097;
+  }
+  if ($cur > 28671) {
+    $tree_offset += 93441; # (809538)
   }
 
   $fh->seek($catalogfile+(($tree_offset + $cur) * $nodeSize),0);
@@ -365,7 +399,7 @@ for (my $jjj=0;$jjj<$no;$jjj++){
    
   if (
       (($nodeDescriptor->kind() == -1)&&($nodeDescriptor->height() == 1)&&($nodeDescriptor->reserved() == 0))
-      && (!$bad{$nodeNumber})
+      &&(!$seen{$nodeNumber})
      )
   {
   my @off;
@@ -451,6 +485,7 @@ for (my $jjj=0;$jjj<$no;$jjj++){
   $maxseen = $nodeNumber if ($nodeNumber > $maxseen);
   $maxseen = $nodeDescriptor->fLink() if ($nodeDescriptor->fLink() > $maxseen);
   $maxseen = $nodeDescriptor->bLink() if ($nodeDescriptor->bLink() > $maxseen);
+  $seen{$nodeNumber}++;
   $nodeNumber++;
   my $flink = $nodeDescriptor->fLink();
   if (

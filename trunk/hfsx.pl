@@ -516,23 +516,17 @@ for (my $jjj=0;$jjj<$no;$jjj++){
   $seen{$nodeNumber}++;
   $nodeNumber++;
   my $flink = $nodeDescriptor->fLink();
-  if (
-      ($flink == 127)|| 
-      ($flink == 143)
-     ) {
-    $flink++;
-  }
     
 # Some unused functionality, to read catalogfile in other:
 #  print "Seeking to: ",$flink,"\n";
 #  $fh->seek($catalogfile+($flink * $nodeSize),0);
 #  $nodeNumber=$flink;
+
   } else { 
     push(@error_nodes,$nodeNumber);
     $nodeNumber++; } 
   }
 }
-
 
 
 # Header fubar, so this is not used, nor working.
@@ -586,7 +580,7 @@ my $currentNode =
   new Filesystem::HFS::HFSPlusCatalogIndexNode
     ('nodeDescriptor' => $nodeDescriptor,
      'datareader' => $dr);
-
+}
 # $header = new Filesystem::HFS::HFSPlusVolumeHeader($currentBlock);
 
 #print &debug($currentBlock);

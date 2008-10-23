@@ -28,8 +28,11 @@ use Filesystem::HFS::HFSPlusCatalogFolder;
 use Filesystem::HFS::HFSPlusCatalogFile;
 
 my $image;
-my $logfile = "macdisk.ls";
-my $image = "/root/bo-backup/bolav-mac-fuck-disk-sdb2";
+my $logfile = "disk.log";
+my $image = "disk.img";
+
+$image = shift(@ARGV) if ($ARGV[0]);
+$logfile = shift(@ARGV) if ($ARGV[0]);
 
 my $nodeSize = 8192;
 my $blockSize = 4096;

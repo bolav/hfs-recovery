@@ -1,0 +1,1 @@
+A bruteforce HFS+ recovery tool, useful when the most import blocks on your disk is gone. Does not need Header node, Catalog header, or B-Tree header. But does involve some manual searching.

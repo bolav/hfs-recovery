@@ -27,7 +27,10 @@ To use this find where these files are located on the disk. Use hexedit. `$ hexe
 
 ### Find head of catalogFile
 
-If you for instance searched for Resources, and you find the file like this: `00D1B150 00 03 00 00 00 00 01 0B 00 09 00 52 00 65 00 73 ...........R.e.s 00D1B160 00 6F 00 75 00 72 00 63 00 65 00 73 00 16 00 00 .o.u.r.c.e.s....`
+If you for instance searched for Resources, and you find the file like this: 
+
+    00D1B150 00 03 00 00 00 00 01 0B 00 09 00 52 00 65 00 73 ...........R.e.s 
+    00D1B160 00 6F 00 75 00 72 00 63 00 65 00 73 00 16 00 00 .o.u.r.c.e.s....`
 
 You can then backtrack, to find the head of this node. The leafNodes have a fingerprint.
 

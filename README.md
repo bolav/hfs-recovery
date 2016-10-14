@@ -34,7 +34,7 @@ If you for instance searched for Resources, and you find the file like this:
 
 You can then backtrack, to find the head of this node. The leafNodes have a fingerprint.
 
-`00D1B000 00 00 00 0F 00 00 00 0E FF 01 00 32 00 00 00 06 ...........2....`
+    00D1B000 00 00 00 0F 00 00 00 0E FF 01 00 32 00 00 00 06 ...........2....
 
 The first 4 bytes is next node. The next 4 bytes is previous node. The FF 01 is leafNode. Then 00 32 means 32 records in this node. 00 00 is reserved, and is always 0 in my experience.
 
